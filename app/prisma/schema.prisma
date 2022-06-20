@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "debian-openssl-1.1.x", "darwin"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id          Int     @id @default(autoincrement())
+  password    String?
+  username    String?
+  nickName    String?
+  openId      String     @unique
+  unionId     String?
+  headImgUrl  String?
+  phoneNumber String?
+  role        Int        @default(1)  // 1、普通用户  2、管理员
+  address     Address?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Address {
+  id          Int       @id @default(autoincrement())
+  province    String
+  city        String
+  district    String
+  address     String
+  isDefault   Int       @default(0)
+  user        User      @relation(fields: [userId], references: [openId])
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model BrandInfo {
+  id             Int           @id @default(autoincrement())
+  brandName      String        @unique
+  brandField     String
+  brandLogo      String?
+  brandOrder     String?
+  brandStatus    Int           @default(1)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model ProductCategory {
+  id                     Int           @id @default(autoincrement())
+  categoryName           String
+  categoryField          String
+  categoryImg            String?
+  categoryLevel          Int
+  averageFactor          Float         @default(0.0002)
+  categoryStatus         Int           @default(1)
+  parentId               String?
+  isHot                  Int           @default(0)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+}
+
+model ProductInfo {
+  id                Int             @id @default(autoincrement())
+  productCode       String          @unique
+  productName       String
+  productModel      String?
+  productSubtitle   String?
+  productKeywords   String?
+  descript          String?
+  productPic        Json?
+  productDetail     Json?
+  productParams     Json?
+  brandId           String?
+  price             Float
+  cost              Float
+  place             String?
+  minStock          Int              @default(5)
+  oneCategoryId     String
+  twoCategoryId     String
+  sort              Int              @default(0)
+  onlyShow          Int              @default(0)
+  auditStatus       Int              @default(1)
+  publishStatus     Int              @default(1)
+  productPicInfo    ProductPicInfo[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model ProductPicInfo {
+  id            Int          @id @default(autoincrement())
+  picDesc       String?
+  ossKey        String?
+  picUrl        String
+  isMaster      Int          @default(0)
+  picSort       Int          
+  picStatus     Int          @default(1)
+  productInfoId String
+  productInfo   ProductInfo  @relation(fields: [productInfoId], references: [productCode])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}

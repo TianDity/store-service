@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: ngnix
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    environment:
+      - NGINX_PORT=${NGINX_PORT}
+      - BACKEND_PORT=${BACKEND_PORT}
+    ports:
+      - 80:${NGINX_PORT}
+    depends_on:
+      - api
+      - mysql
+      - redis
+    networks:
+      - nesjs-network
+  api:
+    container_name: "store_api_${NODE_ENV}"
+    image: "store_api_${NODE_ENV}:0.3.0"
+    environment:
+      - NODE_ENV:${NODE_ENV}
+      - DATABASE_URL:${DATABASE_URL}
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    command: npm run dev
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - nesjs-network
+    volumes:
+      - ./app:/home/node/app
+    restart: unless-stopped
+  redis:
+    container_name: redis
+    image: redis:latest
+    networks:
+      - nesjs-network
+  mysql:
+    image: mysql:${MYSQL_VERSION}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: always
+    networks:
+      - nesjs-network
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - ${MYSQL_PORT}:3306
+    volumes:
+      - ./data:/var/lib/mysql
+
+networks:
+  nesjs-network:

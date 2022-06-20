@@ -1,0 +1,4 @@
+pgdata/*
+.idea/*
+nest-app/dist/*
+.DS_Store
